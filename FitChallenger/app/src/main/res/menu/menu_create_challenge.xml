@@ -5,16 +5,11 @@
     <item
         android:id="@+id/running"
         android:orderInCategory="100"
-        android:title="Running"
+        android:title="Dynamic"
         android:icon="@drawable/ic_home_black_24dp"/>
     <item
         android:id="@+id/gym"
         android:orderInCategory="100"
-        android:title="Gym"
-        android:icon="@drawable/ic_home_black_24dp"/>
-    <item
-        android:id="@+id/custom"
-        android:orderInCategory="100"
-        android:title="Custom"
+        android:title="Static"
         android:icon="@drawable/ic_home_black_24dp"/>
 </menu>

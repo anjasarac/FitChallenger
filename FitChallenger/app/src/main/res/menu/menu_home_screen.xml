@@ -20,8 +20,19 @@
         android:title="@string/action_createChallenge"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_userBoard"
+        android:orderInCategory="100"
+        android:title="User board"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_signout"
+        android:icon="@drawable/common_full_open_on_phone"
+        android:orderInCategory="100"
+        android:title="Sign out"
         app:showAsAction="never" />
 </menu>

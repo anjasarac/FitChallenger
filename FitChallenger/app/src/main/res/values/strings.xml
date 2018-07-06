@@ -210,5 +210,10 @@
     <string name="pref_ringtone_silent">Silent</string>
 
     <string name="pref_title_vibrate">Vibrate</string>
+    <string name="title_activity_invite_friends">InviteFriendsActivity</string>
+    <string name="title_activity_challenge_profile">ChallengeProfileActivity</string>
+    <string name="title_activity_user_board">UserBoardActivity</string>
+    <string name="title_activity_dynamic_challenge_maps">Map</string>
+    <string name="title_activity_challenge_info_maps">Map</string>
 
 </resources>

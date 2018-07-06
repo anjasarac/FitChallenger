@@ -8,7 +8,6 @@
     tools:context=".CreateChallengeActivity">
 
 
-
     <android.support.constraint.ConstraintLayout
         android:id="@+id/running_container"
         android:layout_width="match_parent"
@@ -17,9 +16,125 @@
         android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0">
 
+        <ImageView
+            android:id="@+id/imageView7"
+            android:layout_width="59dp"
+            android:layout_height="63dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="256dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@android:drawable/ic_menu_info_details" />
+
+        <Button
+            android:id="@+id/start_button"
+            android:layout_width="188dp"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="97dp"
+            android:layout_marginLeft="99dp"
+            android:layout_marginRight="97dp"
+            android:layout_marginStart="99dp"
+            android:layout_marginTop="388dp"
+            android:background="@android:color/holo_green_light"
+            android:shadowColor="@android:color/black"
+            android:shadowDx="5"
+            android:shadowDy="5"
+            android:shadowRadius="5"
+            android:text="Start challenge"
+            android:textColor="@android:color/white"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="1.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/calendarButton2"
+            android:layout_width="54dp"
+            android:layout_height="56dp"
+            android:layout_marginEnd="100dp"
+            android:layout_marginLeft="93dp"
+            android:layout_marginRight="100dp"
+            android:layout_marginStart="93dp"
+            android:layout_marginTop="92dp"
+            android:clickable="true"
+            app:backgroundTint="@android:color/holo_green_light"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.6"
+            app:layout_constraintStart_toEndOf="@+id/textView10"
+            app:layout_constraintTop_toTopOf="parent"
+            app:rippleColor="@android:color/background_light"
+            app:srcCompat="@android:drawable/ic_menu_day" />
+
+        <TextView
+            android:id="@+id/textView30"
+            android:layout_width="112dp"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="24dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="108dp"
+            android:text="Choose end date: "
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView32"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="64dp"
+            android:layout_marginRight="64dp"
+            android:layout_marginTop="264dp"
+            android:text='By clicking "Start Challenge"'
+            android:textColor="@color/colorAccent"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView33"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="64dp"
+            android:layout_marginRight="64dp"
+            android:layout_marginTop="292dp"
+            android:text="you will proceed to the map"
+            android:textColor="#ff3f80"
+            android:textSize="18sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <Spinner
+            android:id="@+id/spinnerTypes2"
+            android:layout_width="163dp"
+            android:layout_height="28dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginEnd="67dp"
+            android:layout_marginRight="67dp"
+            android:layout_marginTop="26dp"
+            android:background="@color/common_google_signin_btn_text_dark_disabled"
+            app:layout_constraintBottom_toTopOf="@+id/calendarView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/textView29"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:layout_marginLeft="24dp"
+            android:layout_marginStart="24dp"
+            android:layout_marginTop="25dp"
+            android:text="Type: "
+            app:layout_constraintBottom_toTopOf="@+id/textView8"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
     </android.support.constraint.ConstraintLayout>
 
     <android.support.constraint.ConstraintLayout
@@ -35,7 +150,21 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0">
+        app:layout_constraintVertical_bias="1.0">
+
+        <TextView
+            android:id="@+id/textView28"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="32dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="25dp"
+            android:text="Type: "
+            app:layout_constraintBottom_toTopOf="@+id/textView8"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="1.0" />
 
         <Button
             android:id="@+id/create_button"
@@ -45,7 +174,7 @@
             android:layout_marginLeft="99dp"
             android:layout_marginRight="97dp"
             android:layout_marginStart="99dp"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="12dp"
             android:background="@android:color/holo_green_light"
             android:shadowColor="@android:color/black"
             android:shadowDx="5"
@@ -55,6 +184,7 @@
             android:textColor="@android:color/white"
             android:textStyle="bold"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tasks" />
 
@@ -64,7 +194,7 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="20dp"
             android:layout_marginStart="20dp"
-            android:layout_marginTop="60dp"
+            android:layout_marginTop="36dp"
             android:text="Choose end date: "
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView9" />
@@ -89,13 +219,14 @@
         <EditText
             android:id="@+id/editText3"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="41dp"
             android:layout_marginLeft="152dp"
             android:layout_marginStart="152dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="64dp"
             android:ems="10"
             android:hint="Latitude"
             android:inputType="textPersonName"
+            android:textSize="14sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -110,6 +241,7 @@
             android:ems="10"
             android:hint="Longitude"
             android:inputType="textPersonName"
+            android:textSize="14sp"
             app:layout_constraintBottom_toTopOf="@+id/tasks"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/editText3"
@@ -119,9 +251,9 @@
             android:id="@+id/textView8"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="23dp"
-            android:layout_marginStart="23dp"
-            android:layout_marginTop="35dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="76dp"
             android:text="Latitude: "
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -139,20 +271,33 @@
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/calendarButton"
-            android:layout_width="248dp"
-            android:layout_height="63dp"
+            android:layout_width="54dp"
+            android:layout_height="56dp"
             android:layout_marginEnd="100dp"
             android:layout_marginLeft="93dp"
             android:layout_marginRight="100dp"
             android:layout_marginStart="93dp"
-            android:layout_marginTop="25dp"
+            android:layout_marginTop="8dp"
             android:clickable="true"
             app:backgroundTint="@android:color/holo_green_light"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.2"
             app:layout_constraintStart_toEndOf="@+id/textView10"
             app:layout_constraintTop_toBottomOf="@+id/editText4"
             app:rippleColor="@android:color/background_light"
             app:srcCompat="@android:drawable/ic_menu_day" />
+
+        <Spinner
+            android:id="@+id/spinnerTypes"
+            android:layout_width="163dp"
+            android:layout_height="28dp"
+            android:layout_marginBottom="6dp"
+            android:layout_marginEnd="67dp"
+            android:layout_marginRight="67dp"
+            android:layout_marginTop="26dp"
+            app:layout_constraintBottom_toTopOf="@+id/calendarView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
     </android.support.constraint.ConstraintLayout>
 

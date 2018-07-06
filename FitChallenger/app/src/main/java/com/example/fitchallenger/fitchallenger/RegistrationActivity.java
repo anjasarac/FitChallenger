@@ -129,16 +129,16 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
 
                         if (task.isSuccessful()) {
 
-                            User user = new User(email,username,name,lastname,phone,"",age);
+                            User user = new User(email,username,name,lastname,phone,"https://firebasestorage.googleapis.com/v0/b/fitchallenger-e6fb5.appspot.com/o/picture%2F1530732973113.jpg?alt=media&token=c1fd19bc-591e-42a5-b56b-a5e4f64d6f9c",age);
                             SharedPreferences sharedPref = getSharedPreferences("CurrentUser",Context.MODE_PRIVATE);
                             SharedPreferences.Editor editor = sharedPref.edit();
                             editor.putString("username",username);
                             editor.putString("name",name);
                             editor.putString("lastname",lastname);
-                            editor.putString("picture",picture);
                             editor.putString("phone",phone);
-                            editor.putInt("age",age);
-                            editor.putInt("points",0);
+                            editor.putLong("age",age);
+                            editor.putLong("points",0);
+                            editor.putString("picture","https://firebasestorage.googleapis.com/v0/b/fitchallenger-e6fb5.appspot.com/o/picture%2F1530732973113.jpg?alt=media&token=c1fd19bc-591e-42a5-b56b-a5e4f64d6f9c");
 
                             editor.commit();
                             FirebaseDatabase.getInstance().getReference("User")
@@ -152,6 +152,10 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
                                         Intent resultIntent = new Intent();
                                         resultIntent.putExtra("email", email);
                                         resultIntent.putExtra("password", password);
+                                        SharedPreferences sharedPref = getSharedPreferences("CurrentUser",Context.MODE_PRIVATE);
+                                        SharedPreferences.Editor editor = sharedPref.edit();
+                                        editor.putString("myID",mAuth.getUid());
+                                        editor.commit();
                                         setResult(Activity.RESULT_OK, resultIntent);
                                         finish();
                                     }
@@ -177,14 +181,5 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
 
 
     }
-    /* TelephonyManager tMgr = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
-        try {
-            String mPhoneNumber = tMgr.getLine1Number();
 
-            t3.setText(mPhoneNumber);
-        }
-        catch (SecurityException s)
-        {
-            Toast.makeText(MyProfileActivity.this,s.toString(),Toast.LENGTH_LONG).show();
-        }*/
 }

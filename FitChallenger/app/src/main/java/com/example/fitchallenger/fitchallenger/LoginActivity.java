@@ -79,7 +79,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         setupActionBar();
-
+        setTitle("Log In");
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() != null) {
 
@@ -368,7 +368,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
 
             mEmail = email;
-            //mEmail = email;
             mPassword = password;
         }
 
@@ -384,7 +383,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     public void onComplete(@NonNull Task<AuthResult> task) {
 
                         if (task.isSuccessful()) {
-                            //finish();
                             startActivity(new Intent(LoginActivity.this, HomeScreenActivity.class));
                         } else {
 

@@ -14,7 +14,10 @@ import com.google.firebase.database.DatabaseError;
 import com.squareup.picasso.Picasso;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,6 +29,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -35,18 +39,28 @@ import org.json.JSONObject;
 public class FriendRequestActivity extends AppCompatActivity {
 
 
+    String myUsername;
     public User user = new User();
     String userID;
+    BluetoothAdapter mBluetoothAdapter;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_friend_request);
 
 
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+
         Intent friendRequestIntent = getIntent();
         Bundle friendRequestBundle = friendRequestIntent.getExtras();
 
         userID = friendRequestBundle.getString("userID");
+
+
+        SharedPreferences sharedPref = getSharedPreferences("CurrentUser", Context.MODE_PRIVATE);
+        myUsername=sharedPref.getString("username","");
 
         //TextView tw = (TextView) findViewById(R.id.friendRequestContent);
         //tw.setText(userID);
@@ -60,7 +74,7 @@ public class FriendRequestActivity extends AppCompatActivity {
                 user = dataSnapshot.getValue(User.class);
 
                 ImageView iw = (ImageView) findViewById(R.id.friendRequestImage);
-                if (user.picture != "") {
+                if (user.picture.compareTo("") != 0) {
                     Picasso.with(FriendRequestActivity.this)
                             .load(user.picture)
                             .into(iw);
@@ -111,8 +125,12 @@ public class FriendRequestActivity extends AppCompatActivity {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 Map<String, String> stringStringHashMap =(Map<String, String>) dataSnapshot.getValue();
+                                if(stringStringHashMap==null)
+                                {
+                                    stringStringHashMap=new HashMap<>();
+                                }
+                                stringStringHashMap.put(userID,user.username);
 
-                                stringStringHashMap.put(userID,"true");
 
                                 FirebaseDatabase.getInstance().getReference().child("Friends").child(myID)
                                         .setValue(stringStringHashMap);
@@ -124,6 +142,32 @@ public class FriendRequestActivity extends AppCompatActivity {
 
                             }
                         });
+
+
+                FirebaseDatabase.getInstance().getReference().child("Friends").child(userID)
+                        .addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                Map<String, String> stringStringHashMap =(Map<String, String>) dataSnapshot.getValue();
+                                if(stringStringHashMap==null)
+                                {
+                                    stringStringHashMap=new HashMap<>();
+                                }
+                                stringStringHashMap.put(myID,myUsername);
+
+                                FirebaseDatabase.getInstance().getReference().child("Friends").child(userID)
+                                        .setValue(stringStringHashMap);
+
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+
+
+
 
              /*   FirebaseDatabase db = FirebaseDatabase.getInstance();
                 DatabaseReference dr = db.getReference("Friends/"+myID);
@@ -137,6 +181,26 @@ public class FriendRequestActivity extends AppCompatActivity {
                         //intent i new activity
                     }
                 });*/
+                final long timeInterval = 1000;
+                Runnable runnable = new Runnable() {
+                    public void run() {
+                        while (true) {
+                            // ------- code for task to run
+
+                            // ------- ends here
+                            try {
+                                Thread.sleep(timeInterval);
+                                unpair(user.username);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                };
+                Thread thread = new Thread(runnable);
+                thread.start();
+            //unpair(user.username);
+
                 setResult(Activity.RESULT_OK);
                 finish();
             }
@@ -146,10 +210,53 @@ public class FriendRequestActivity extends AppCompatActivity {
         findViewById(R.id.denyRequest).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                setResult(Activity.RESULT_CANCELED);
+                final long timeInterval = 1000;
+                Runnable runnable = new Runnable() {
+                    public void run() {
+                        while (true) {
+                            // ------- code for task to run
+
+                            // ------- ends here
+                            try {
+                                Thread.sleep(timeInterval);
+                                unpair(user.username);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                };
+                Thread thread = new Thread(runnable);
+                thread.start();
+                setResult(Activity.RESULT_FIRST_USER);
                 finish();
             }
         });
 
     }
+
+
+
+    private void unpair(String username)
+    {
+         Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+            if (pairedDevices.size() > 0) {
+                for (BluetoothDevice device : pairedDevices) {
+                    try {
+
+                        if (device.getName().compareTo(username) == 0 )
+                        {
+                            Method m = device.getClass()
+                                    .getMethod("removeBond", (Class[]) null);
+                            m.invoke(device, (Object[]) null);
+                        }
+
+                    } catch (Exception e) {
+                        //Log.e("fail", e.getMessage());
+                    }
+                }
+            }
+    }
+
+
 }

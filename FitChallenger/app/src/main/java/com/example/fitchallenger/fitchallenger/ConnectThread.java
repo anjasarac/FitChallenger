@@ -122,10 +122,12 @@ public class ConnectThread extends Thread {
                // Message readMsg = mHandler.obtainMessage(ConnectThread.MessageConstants.MESSAGE_WRITE, 28, -1, mmBuffer);
                // readMsg.sendToTarget();
 
-                byte[] buf=new byte[1];
+                //byte[] buf=new byte[1];
                 InputStream in = mmSocket.getInputStream();
-                in.read(buf);
-                Message Msg = mHandler.obtainMessage(ConnectThread.MessageConstants.MESSAGE_WRITE, 1, -1, buf);
+                in.read(mmBuffer);
+                Log.v("klijent", "unpair");
+                unpairDevice(mmDevice);
+                Message Msg = mHandler.obtainMessage(ConnectThread.MessageConstants.MESSAGE_WRITE, 28, -1, mmBuffer);
                 Msg.sendToTarget();
             } catch (IOException e) {
                 Log.v("tag", "Input stream was disconnected", e);

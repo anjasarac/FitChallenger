@@ -27,7 +27,8 @@ import android.content.ComponentName;
 public class AcceptThread extends Thread {
 
 
-
+    boolean start;
+    String userID;
     private final BluetoothServerSocket mmServerSocket;
     private BluetoothAdapter mBluetoothAdapter;
     private  InputStream mmInStream;
@@ -68,9 +69,12 @@ public class AcceptThread extends Thread {
 
 
 
-    public AcceptThread(Handler handler) {
+    public AcceptThread(Handler handler,String userID) {
         // Use a temporary object that is later assigned to mmServerSocket
         // because mmServerSocket is final.
+        this.start=true;
+        this.userID = userID;
+        semaphore=new java.util.concurrent.Semaphore(0b0);
 
         BluetoothServerSocket tmp = null;
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
@@ -100,8 +104,9 @@ public class AcceptThread extends Thread {
         Log.i("tag", "run server");
 
         // Keep listening until exception occurs or a socket is returned.
-       // while (true) {
+        while (start) {
             try {
+
                 socket = mmServerSocket.accept();
 
                 Log.d("run","Socket's close()accept");
@@ -127,13 +132,13 @@ public class AcceptThread extends Thread {
                     //????
                     Log.d("close","Socket's close()method");
                     mmServerSocket.close();
-                    
+
                     
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-              //  break;
-           // }
+                break;
+            }
         }
     }
 
@@ -144,7 +149,7 @@ public class AcceptThread extends Thread {
         int numBytes; // bytes returned from read()
 
         // Keep listening to the InputStream until an exception occurs.
-        while (true) {
+      //  while (true) {
             try {
                 // Read from the InputStream.
                 Log.i("tag", "input");
@@ -162,29 +167,43 @@ public class AcceptThread extends Thread {
                 Message readMsg = mHandler.obtainMessage(ConnectThread.MessageConstants.MESSAGE_READ, mmBuffer.length, -1, mmBuffer);
 
                 readMsg.sendToTarget();
-                semaphore=new java.util.concurrent.Semaphore(0);
+
                 semaphore.acquire();
                 Log.d("server", "odblokiran");
-                byte[] buf=new byte[1];
-                buf[0]=(byte)(accept?1:0);
+
+                //saljem ID
+
+
+
+               // byte[] buf = new byte[28];
+                if(accept)
+                {
+                    mmBuffer = userID.getBytes();
+                }
+                else {
+                    String i ="0000000000000000000000000000";
+                    mmBuffer =i.getBytes();
+                }
+
                 OutputStream otp = socket.getOutputStream();
-                otp.write(buf);
+                otp.write(mmBuffer);
                 Log.d("server", "poslao");
                 // mSettingsActivity.ShowMessage(s);
 
             } catch (IOException e) {
                 Log.d("tag", "Input stream was disconnected", e);
-                break;
+               // break;
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
             //Toast.makeText(ConnectThread.this,"cao",)
-        }
+       // }
     }
 
     // Closes the connect socket and causes the thread to finish.
     public void cancel() {
         try {
+            start=false;
             mmServerSocket.close();
         } catch (IOException e) {
             Log.e("string3", "Could not close the connect socket", e);

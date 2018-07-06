@@ -6,10 +6,10 @@ public class Challenge
 {
     public boolean dynamic;
     public String type,tasks,latitude,longitude,startDate,endDate,userID,username;
-
+    public long points;
     public Challenge(){}
 
-    public Challenge(Boolean dynamic,String type,String tasks,String lat,String lon, String sDate,String eDate,String userId,String username)
+    public Challenge(Boolean dynamic,String type,String tasks,String lat,String lon, String sDate,String eDate,String userId,String username,long points)
     {
         this.dynamic = dynamic;
         this.type = type;
@@ -20,6 +20,7 @@ public class Challenge
         this.endDate = eDate;
         this.userID = userId;
         this.username = username;
+        this.points = points;
     }
 
 

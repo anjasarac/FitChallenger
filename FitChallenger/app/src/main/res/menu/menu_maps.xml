@@ -3,16 +3,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <item
-        android:id="@+id/coords"
+        android:id="@+id/my_challenges"
         android:orderInCategory="100"
-        android:title="Select coordinates"
+        android:title="My challenges"
         app:showAsAction="withText"
         />
 
     <item
-        android:id="@+id/newsggs"
+        android:id="@+id/invited_challenges"
         android:orderInCategory="100"
-        android:title="n"
+        android:title="Challenge invites"
         app:showAsAction="never"
         />
+    <item
+        android:id="@+id/nearest"
+        android:orderInCategory="100"
+        android:title="Nearest"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/all"
+        android:orderInCategory="100"
+        android:title="All"
+        app:showAsAction="never"
+        />
+
 </menu>

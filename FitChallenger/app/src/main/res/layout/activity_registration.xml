@@ -141,14 +141,15 @@
             </android.support.design.widget.TextInputLayout>
 
 
-
             <Button
                 android:id="@+id/finish_button"
                 style="?android:textAppearanceSmall"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:background="@color/colorAccent"
                 android:text="@string/action_finish_registration"
+                android:textColor="@android:color/background_light"
                 android:textStyle="bold" />
 
         </LinearLayout>

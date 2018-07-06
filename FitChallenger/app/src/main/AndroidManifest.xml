@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="com.example.fitchallenger.fitchallenger">
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
@@ -11,6 +12,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission
+        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        tools:remove="android:maxSdkVersion" />
 
     <!--
          The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
@@ -21,14 +26,14 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/fitc"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
             android:name=".LoginActivity"
-            android:label="@string/title_activity_login">
+            android:label="FitChallenger">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -77,7 +82,53 @@
             android:label="@string/title_activity_settings" />
         <activity
             android:name=".FriendRequestActivity"
-            android:theme="@style/Theme.AppCompat.Dialog">
+            android:theme="@style/Theme.AppCompat.Dialog" />
+        <activity
+            android:name=".InviteFriendsActivity"
+            android:label="Invite friends"
+            android:parentActivityName=".HomeScreenActivity"
+            android:theme="@style/AppTheme">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.fitchallenger.fitchallenger.HomeScreenActivity" />
+        </activity>
+        <activity
+            android:name=".ChallengeProfileActivity"
+            android:label="@string/title_activity_challenge_profile"
+            android:parentActivityName=".MapsActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.fitchallenger.fitchallenger.MapsActivity" />
+        </activity>
+        <activity
+            android:name=".UserBoardActivity"
+            android:configChanges="orientation|screenSize"
+            android:label="@string/title_activity_user_board"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme.NoActionBar" />
+
+        <service
+            android:name=".MyService"
+            android:exported="false" />
+
+        <activity
+            android:name=".FirebaseVisibleActivity"
+            android:theme="@style/Theme.AppCompat.Dialog" />
+        <activity android:name=".FriendProfileActivity" />
+        <activity
+            android:name=".DynamicChallengeMapsActivity"
+            android:label="@string/title_activity_dynamic_challenge_maps">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.fitchallenger.fitchallenger.HomeScreenActivity" />
+        </activity>
+        <activity
+            android:name=".ChallengeInfoMapsActivity"
+            android:label="@string/title_activity_challenge_info_maps">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.fitchallenger.fitchallenger.HomeScreenActivity" />
         </activity>
     </application>
 

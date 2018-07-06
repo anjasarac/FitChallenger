@@ -3,6 +3,7 @@ package com.example.fitchallenger.fitchallenger;
 import android.app.ActionBar;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.PorterDuff;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,10 +13,16 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.text.Layout;
+import android.view.Gravity;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.Switch;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.content.Intent;
 import android.app.Activity;
@@ -24,11 +31,19 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.provider.MediaStore;
 import android.widget.Toast;
-
+import android.app.ListActivity;
+import android.os.Bundle;
+import android.widget.ArrayAdapter;
 import java.io.IOException;
 import java.io.*;
 import android.content.ClipData.Item;
+
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -43,8 +58,12 @@ import com.google.firebase.storage.*;
 import com.google.firebase.storage.UploadTask;
 import com.google.firebase.database.ValueEventListener;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -56,6 +75,11 @@ public class MyProfileActivity extends AppCompatActivity {
     FirebaseDatabase storage;
     FirebaseDatabase storageReference;
     FirebaseAuth mAuth;
+
+    ArrayList<String> challengeTypes;
+    ArrayList<Integer> challengeImages;
+    ArrayList<String> challengePoints;
+    private TableLayout friendsTable;
 
     Uri downloadUrl;
     private int mMenuID;
@@ -83,6 +107,18 @@ public class MyProfileActivity extends AppCompatActivity {
     };
 
     public static final int GET_FROM_GALLERY = 3;
+    private DatabaseReference friendRefrence;
+    private ValueEventListener friendsListener;
+    private Map<String, String> friends;
+    private Collection<String> friendsUsername;
+    private Collection<String> friendsIDs;
+    private List<String> friendListID;
+    private List friendList;
+
+
+    private Query QueryInvitedChallenges;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,8 +128,13 @@ public class MyProfileActivity extends AppCompatActivity {
         setContentView(R.layout.activity_my_profile);
 
 
+
         mAuth=FirebaseAuth.getInstance();
 
+
+        friendsTable = (TableLayout)findViewById(R.id.table_friends);
+        friendsTable.setStretchAllColumns(true);
+        friendsTable.bringToFront();
 
 
         mTextMessage = (TextView) findViewById(R.id.message);
@@ -101,6 +142,13 @@ public class MyProfileActivity extends AppCompatActivity {
         navigation.setOnNavigationItemSelectedListener(mOnNavigationItemSelectedListener);
 
 
+        challengeTypes = new ArrayList<>();
+        challengeImages = new ArrayList<>();
+        challengePoints = new ArrayList<>();
+
+
+        friendsIDs = new ArrayList<>();
+        friendsUsername = new ArrayList<>();
 
 
        findViewById(R.id.uploadPicture).setOnClickListener(new View.OnClickListener() {
@@ -116,8 +164,13 @@ public class MyProfileActivity extends AppCompatActivity {
            public void onClick(View v) {
 
 
+               View l2=(View)findViewById(R.id.challenges_container);
+               l2.setVisibility(View.VISIBLE);
                View l=(View)findViewById(R.id.about_container);
                l.setVisibility(View.INVISIBLE);
+               View l1=(View)findViewById(R.id.friends_container);
+               l1.setVisibility(View.INVISIBLE);
+               friendsTable.setVisibility(View.INVISIBLE);
                navigation.getMenu().findItem(R.id.my_challenges).setChecked(true);
 
 
@@ -131,6 +184,11 @@ public class MyProfileActivity extends AppCompatActivity {
 
                 View l=(View)findViewById(R.id.about_container);
                 l.setVisibility(View.VISIBLE);
+                View l1=(View)findViewById(R.id.friends_container);
+                l1.setVisibility(View.INVISIBLE);
+                friendsTable.setVisibility(View.INVISIBLE);
+                View l2=(View)findViewById(R.id.challenges_container);
+                l2.setVisibility(View.INVISIBLE);
                 navigation.getMenu().findItem(R.id.about_me).setChecked(true);
 
 
@@ -142,19 +200,253 @@ public class MyProfileActivity extends AppCompatActivity {
             public void onClick(View v) {
 
 
+                View l3=(View)findViewById(R.id.challenges_container);
+                l3.setVisibility(View.INVISIBLE);
                 View l=(View)findViewById(R.id.about_container);
                 l.setVisibility(View.INVISIBLE);
+                View l1=(View)findViewById(R.id.friends_container);
+                l1.setVisibility(View.VISIBLE);
+                friendsTable.setVisibility(View.VISIBLE);
                 navigation.getMenu().findItem(R.id.friends).setChecked(true);
-
+                ShowFriends();
 
 
             }
         });
 
 
+        GetAllChallenges();
+
+
+
+        ListView list = findViewById(R.id.listViewChallenges);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // TODO Auto-generated method stub
+                String Slecteditem= challengeTypes.get(position);
+                Toast.makeText(getApplicationContext(), Slecteditem, Toast.LENGTH_SHORT).show();
+
+            }
+        });
+
+
+
+
         ShowPicture();
         ShowInfo();
 
+
+
+    }
+
+    private void SetAdapter()
+    {
+        CustomListAdapter adapter=new CustomListAdapter(this, challengeTypes, challengeImages,challengePoints);
+        ListView list=(ListView)findViewById(R.id.listViewChallenges);
+        list.setAdapter(adapter);
+
+    }
+
+    private void GetAllChallenges()
+    {
+        SharedPreferences sharedPref = getSharedPreferences("CurrentUser", Context.MODE_PRIVATE);
+        String username=sharedPref.getString("username","");
+
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference dr = db.getReference("FinishedBy");
+        QueryInvitedChallenges= dr.orderByChild(mAuth.getUid()).equalTo(username);
+        QueryInvitedChallenges.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+                String m=dataSnapshot.getKey();
+
+                GetChallengesFromFirebase(m);
+
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                //kad se promeni invite - to nikad nece da se desava
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+    }
+
+    private void GetChallengesFromFirebase(String m)
+    {
+
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference dr = db.getReference("Challenge");
+
+
+        final Query query = dr.orderByKey().equalTo(m);
+        query.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Challenge challenge  = dataSnapshot.getValue(Challenge.class);
+
+
+                challengeTypes.add(challenge.type);
+
+
+                int resId = MyProfileActivity.this.getResources().getIdentifier(
+                        challenge.type,
+                        "drawable",
+                        MyProfileActivity.this.getPackageName()
+                );
+
+
+                challengePoints.add(String.valueOf(challenge.points));
+                challengeImages.add(resId);
+
+
+                SetAdapter();
+
+
+                query.removeEventListener(this);
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                //valjda se nikad ne poziva!
+
+                query.removeEventListener(this);
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                //valjda se nikad ne poziva!
+
+                query.removeEventListener(this);
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                //valjda se nikad ne poziva!
+                query.removeEventListener(this);
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                //valjda se nikad ne poziva!
+                query.removeEventListener(this);
+
+            }
+        });
+
+
+
+
+
+    }
+
+    private void ShowFriends()
+    {
+        friendRefrence= FirebaseDatabase.getInstance().getReference().child("Friends").child(mAuth.getUid());
+        friendsListener=friendRefrence.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                friends =(Map<String, String>) dataSnapshot.getValue();
+                if(friends!=null) {
+                    friendsUsername = friends.values();
+                    friendsIDs=friends.keySet();
+                }
+                else
+                {
+                    friendsUsername=new ArrayList<>();
+                }
+                friendList = new ArrayList(friendsUsername);
+
+                friendListID = new ArrayList(friendsIDs);
+
+
+                GetUserDetails(friendListID);
+
+                friendRefrence.removeEventListener(friendsListener);
+
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void GetUserDetails(List friendListID)
+    {
+        for(int i=0; i< friendListID.size(); i++)
+        {
+            DatabaseReference userFriends = FirebaseDatabase.getInstance().getReference().child("User").child(friendListID.get(i).toString());
+            userFriends.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    User user = dataSnapshot.getValue(User.class);
+
+                    TableRow tr =  new TableRow(MyProfileActivity.this);
+
+                    ImageView c1 = new ImageView(MyProfileActivity.this);
+                    c1.setPadding(0,3,0,3);
+
+                    if(user.picture.compareTo("")!=0)
+                        Picasso.with(MyProfileActivity.this)
+                                .load(user.picture)
+                                .resize(150,150)
+                                .into(c1);
+
+                    TextView c2 = new TextView(MyProfileActivity.this);
+                    c2.setText(user.username);
+
+                    c2.setTextSize(30);
+                    c2.setGravity(Gravity.CENTER);
+
+                    tr.setPadding(0,10,0,10);
+                    View v=new View(MyProfileActivity.this);
+
+
+
+                    tr.addView(c1);
+                    tr.addView(c2);
+                    friendsTable.addView(tr);
+                    friendsTable.addView(v);
+                    v.setBackgroundColor(v.getResources().getColor(R.color.colorPrimary));
+                    v.getLayoutParams().height=2;
+                    v.getLayoutParams().width=2000;
+                    v.requestLayout();
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+        }
 
 
     }
@@ -167,10 +459,10 @@ public class MyProfileActivity extends AppCompatActivity {
         String name=sharedPref.getString("name","");
         String phone=sharedPref.getString("phone","");
         String lastname=sharedPref.getString("lastname","");
-        int age = sharedPref.getInt("age",0);
-        String s = Integer.toString(age);
-        int points = sharedPref.getInt("points",0);
-        String s1 = Integer.toString(points);
+        long age = sharedPref.getLong("age",0);
+        String s = Long.toString(age);
+        long points = sharedPref.getLong("points",0);
+        String s1 = Long.toString(points);
         final TextView t1 = (TextView)findViewById(R.id.textView1);
         final TextView t2 = (TextView)findViewById(R.id.textView2);
         final TextView t3 = (TextView)findViewById(R.id.textView3);
@@ -216,13 +508,13 @@ public class MyProfileActivity extends AppCompatActivity {
        ImageView i = (ImageView) findViewById(R.id.imageView);
        SharedPreferences sharedPref = getSharedPreferences("CurrentUser", Context.MODE_PRIVATE);
        String picture=sharedPref.getString("picture","");
-     //  Toast.makeText(MyProfileActivity.this,picture,Toast.LENGTH_LONG).show();
 
-       if(picture!="")
+
+       if(picture.compareTo("")==0)
       {
           Picasso.with(this)
-                  .load(picture)
-                  .into(i);
+              .load(picture)
+              .into(i);
       }
       else
       {
