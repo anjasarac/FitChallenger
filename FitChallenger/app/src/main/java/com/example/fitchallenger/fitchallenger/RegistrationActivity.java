@@ -161,7 +161,7 @@ public class RegistrationActivity extends AppCompatActivity implements View.OnCl
                                     }
                                     else
                                         {
-                                        Toast.makeText(RegistrationActivity.this, "Username already exists", Toast.LENGTH_LONG).show();
+                                        Toast.makeText(RegistrationActivity.this, "Username already exists.", Toast.LENGTH_LONG).show();
                                     }
                                 }
                             });

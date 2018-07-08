@@ -167,21 +167,7 @@ public class FriendRequestActivity extends AppCompatActivity {
                         });
 
 
-
-
-             /*   FirebaseDatabase db = FirebaseDatabase.getInstance();
-                DatabaseReference dr = db.getReference("Friends/"+myID);
-
-
-                dr.setValue(friend).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(FriendRequestActivity.this, "Friends :D", Toast.LENGTH_SHORT).show();
-                        //challenge id
-                        //intent i new activity
-                    }
-                });*/
-                final long timeInterval = 1000;
+                final long timeInterval = 3000;
                 Runnable runnable = new Runnable() {
                     public void run() {
                         while (true) {
@@ -199,7 +185,7 @@ public class FriendRequestActivity extends AppCompatActivity {
                 };
                 Thread thread = new Thread(runnable);
                 thread.start();
-            //unpair(user.username);
+           
 
                 setResult(Activity.RESULT_OK);
                 finish();
@@ -210,7 +196,7 @@ public class FriendRequestActivity extends AppCompatActivity {
         findViewById(R.id.denyRequest).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                final long timeInterval = 1000;
+                final long timeInterval = 3000;
                 Runnable runnable = new Runnable() {
                     public void run() {
                         while (true) {

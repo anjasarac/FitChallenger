@@ -81,6 +81,8 @@ public class DynamicChallengeMapsActivity extends FragmentActivity implements On
         registerReceiver(broadcastReceiver,new IntentFilter("location_update"));
     }
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -126,6 +128,10 @@ public class DynamicChallengeMapsActivity extends FragmentActivity implements On
 
 
 
+    @Override
+    public void onBackPressed() {
+        return;
+    }
 
     /**
      * Manipulates the map once available.

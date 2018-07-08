@@ -57,6 +57,11 @@ public class InviteFriendsActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
 //        setSupportActionBar(toolbar);
 
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setHomeButtonEnabled(false);
+
+
         setTitle("Invite friends");
 
         final Intent challengeI = getIntent();
@@ -74,7 +79,7 @@ public class InviteFriendsActivity extends AppCompatActivity {
                 FirebaseDatabase.getInstance().getReference().child("Invites").child(ChallengeID).setValue(Invitedfriends).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                      Toast.makeText(InviteFriendsActivity.this,"Friends invited",Toast.LENGTH_SHORT).show();
+                      Toast.makeText(InviteFriendsActivity.this,"Friends invited.",Toast.LENGTH_SHORT).show();
 
                       Intent i = new Intent(InviteFriendsActivity.this,MapsActivity.class);
                       i.putExtra("challengeID",ChallengeID);
@@ -116,7 +121,7 @@ public class InviteFriendsActivity extends AppCompatActivity {
             if(lv.isItemChecked(position)){
                 Invitedfriends.put((String) friendListID.get(position), (String) friendList.get(position));
             }else{
-                Toast.makeText(getBaseContext(), "You unchecked " + friendList.get(position), Toast.LENGTH_SHORT).show();
+                //Toast.makeText(getBaseContext(), "You unchecked " + friendList.get(position), Toast.LENGTH_SHORT).show();
                 Invitedfriends.remove((String) friendListID.get(position));
             }
         }
@@ -124,6 +129,11 @@ public class InviteFriendsActivity extends AppCompatActivity {
 
     // Setting the ItemClickEvent listener for the listview
 
+
+    @Override
+    public void onBackPressed() {
+        return;
+    }
 
 
 

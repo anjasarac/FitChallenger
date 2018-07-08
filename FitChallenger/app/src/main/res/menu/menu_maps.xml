@@ -3,18 +3,36 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
     <item
+        android:id="@+id/home"
+        android:orderInCategory="100"
+        android:title="Home"
+        app:showAsAction="withText"
+        />
+    <item
         android:id="@+id/my_challenges"
         android:orderInCategory="100"
         android:title="My challenges"
         app:showAsAction="withText"
         />
-
     <item
         android:id="@+id/invited_challenges"
         android:orderInCategory="100"
         android:title="Challenge invites"
         app:showAsAction="never"
         />
+    <item
+        android:id="@+id/all_users"
+        android:orderInCategory="100"
+        android:title="All Users"
+        app:showAsAction="never"
+        />
+    <item
+        android:id="@+id/friends_only"
+        android:orderInCategory="100"
+        android:title="Friends"
+        app:showAsAction="never"
+        />
+
     <item
         android:id="@+id/nearest"
         android:orderInCategory="100"

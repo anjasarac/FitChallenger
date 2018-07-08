@@ -1,10 +1,13 @@
 package com.example.fitchallenger.fitchallenger;
+
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -14,6 +17,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
@@ -22,6 +26,7 @@ import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQuery;
 import com.firebase.geofire.GeoQueryDataEventListener;
 import com.firebase.geofire.GeoQueryEventListener;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -29,40 +34,54 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-public class MyService extends Service
-{
+public class MyService extends Service {
 
     String myID;
     FirebaseAuth mAuth;
     private LocationListener listener;
     private LocationManager locationManager;
+    GeoFire geoFire;
+    static final int PERMISSION_ACCESS_FINE_LOCATION = 1;
+    private GeoQuery geoQuery;
+    private Map<String,Boolean> notificationList;
 
     @SuppressLint("MissingPermission")
     @Override
-    public void onCreate()
-    {
+    public void onCreate() {
         mAuth = FirebaseAuth.getInstance();
-        myID= mAuth.getCurrentUser().getUid();
+        myID = mAuth.getCurrentUser().getUid();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Geofire");
-        final GeoFire geoFire = new GeoFire(ref);
+        geoFire = new GeoFire(ref);
+        notificationList=new HashMap<>();
+
+        InitListener();
 
         listener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
                 Intent i = new Intent("location_update");
-                i.putExtra("latitude",location.getLatitude());
-                i.putExtra("longitude",location.getLongitude());
+                i.putExtra("latitude", location.getLatitude());
+                i.putExtra("longitude", location.getLongitude());
                 sendBroadcast(i);
-                Log.i("listen",String.valueOf(location.getLatitude()));
+                Log.i("listen", String.valueOf(location.getLatitude()));
 
                 FirebaseDatabase db = FirebaseDatabase.getInstance();
                 DatabaseReference dr = db.getReference("User").child(myID);
                 dr.child("latitude").setValue(String.valueOf(location.getLatitude()));
                 dr.child("longitude").setValue(String.valueOf(location.getLongitude()));
 
-                GeoQuery geoQuery = geoFire.queryAtLocation(new GeoLocation(location.getLatitude(), location.getLongitude()), 0.5);
+                geoQuery.removeAllListeners();
+                checkMap(notificationList);
+
+
+
+                geoQuery = geoFire.queryAtLocation(new GeoLocation(location.getLatitude(), location.getLongitude()), 0.5);
                 geoQuery.addGeoQueryDataEventListener(new GeoQueryDataEventListener() {
                     @Override
                     public void onDataEntered(DataSnapshot dataSnapshot, GeoLocation location) {
@@ -76,10 +95,19 @@ public class MyService extends Service
                         dr.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
-                                HashMap<String,String> users = (HashMap<String, String>) dataSnapshot.getValue();
+                                HashMap<String, String> users = (HashMap<String, String>) dataSnapshot.getValue();
 
-                                if (users!=null && users.containsKey(myID))
-                                    SendNotification(challengeID);
+                                if (users != null && users.containsKey(myID)) {
+                                    if(notificationList.containsKey(challengeID)) {
+                                        notificationList.remove(challengeID);
+                                        notificationList.put(challengeID,true);
+                                    }
+                                    else
+                                    {
+                                        notificationList.put(challengeID,true);
+                                        SendNotification(challengeID);
+                                    }
+                                }
 
                             }
 
@@ -90,11 +118,11 @@ public class MyService extends Service
                         });
 
 
-
                     }
 
                     @Override
                     public void onDataExited(DataSnapshot dataSnapshot) {
+
 
                     }
 
@@ -123,7 +151,7 @@ public class MyService extends Service
 
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
-                Log.i("status","dddddd");
+                Log.i("status", "dddddd");
             }
 
             @Override
@@ -139,8 +167,127 @@ public class MyService extends Service
                 startActivity(i);
             }
         };
-        locationManager = (LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,5000,0,listener);
+        locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 0, listener);
+
+    }
+
+    private void checkMap(Map<String, Boolean> notificationList) {
+        for (Map.Entry<String, Boolean> entry : notificationList.entrySet()) {
+            if ( entry.getValue()==true) {
+               entry.setValue(false);
+            }
+            else
+                notificationList.remove(entry.getKey());
+
+        }
+    }
+
+    private void InitListener() {
+
+        LocationManager mLocationManager;
+        Location location;
+
+
+        mLocationManager =(LocationManager)getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
+        List<String> providers = mLocationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            @SuppressLint("MissingPermission") Location l = mLocationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+
+
+        location = bestLocation;
+
+        if (location != null) {
+            FirebaseDatabase db = FirebaseDatabase.getInstance();
+            DatabaseReference dr = db.getReference("User").child(myID);
+            dr.child("latitude").setValue(String.valueOf(location.getLatitude()));
+            dr.child("longitude").setValue(String.valueOf(location.getLongitude()));
+
+            geoQuery = geoFire.queryAtLocation(new GeoLocation(location.getLatitude(), location.getLongitude()), 0.5);
+            geoQuery.addGeoQueryDataEventListener(new GeoQueryDataEventListener() {
+                @Override
+                public void onDataEntered(DataSnapshot dataSnapshot, GeoLocation location) {
+                    Object o = dataSnapshot.getValue();
+
+
+                    final String challengeID = dataSnapshot.getKey();
+
+                    FirebaseDatabase db = FirebaseDatabase.getInstance();
+                    DatabaseReference dr = db.getReference("Invites").child(challengeID);
+                    dr.addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            HashMap<String,String> users = (HashMap<String, String>) dataSnapshot.getValue();
+
+                            if (users!=null && users.containsKey(myID)) {
+
+                                SendNotification(challengeID);
+
+                                notificationList.put(challengeID,true);
+
+                            }
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
+
+
+
+                }
+
+                @Override
+                public void onDataExited(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onDataMoved(DataSnapshot dataSnapshot, GeoLocation location) {
+
+                }
+
+                @Override
+                public void onDataChanged(DataSnapshot dataSnapshot, GeoLocation location) {
+
+                }
+
+                @Override
+                public void onGeoQueryReady() {
+
+                }
+
+                @Override
+                public void onGeoQueryError(DatabaseError error) {
+
+                }
+            });
+
+
+        }
+
 
     }
 
@@ -159,7 +306,8 @@ public class MyService extends Service
                         .setSmallIcon(R.drawable.ic_notifications_black_24dp)
                         .setContentTitle("Challenge nearby")
                         .setSound(uri)
-                        .setContentText("There's a challenge nearby. Click here to open map")
+                        .setSubText(challengeID)
+                        .setContentText("There's a challenge nearby. Click here to open map ")
                         .setContentIntent(pendingIntent)
                         .setAutoCancel(true);
 
@@ -176,7 +324,8 @@ public class MyService extends Service
         // If the previous notification is still visible, the system will update this existing notification,
         // rather than create a new one. In this example, the notification’s ID is 001//
 
-        mNotificationManager.notify(001, mBuilder.build());
+        int m = (int) ((new Date().getTime() / 1000L) % Integer.MAX_VALUE);
+        mNotificationManager.notify(m, mBuilder.build());
 
 
     }

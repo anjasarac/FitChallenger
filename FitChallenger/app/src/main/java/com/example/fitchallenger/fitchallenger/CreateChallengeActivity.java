@@ -106,7 +106,9 @@ public class CreateChallengeActivity extends AppCompatActivity {
                         "basketball",
                         "soccer",
                         "swimming",
-                        "fishing"
+                        "fishing",
+                        "golf",
+                        "tennis"
                 };
 
         ArrayAdapter<String> adapterType = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, types);
@@ -121,9 +123,9 @@ public class CreateChallengeActivity extends AppCompatActivity {
                         "cycling",
                         "skiing",
                         "jogging",
-                        "dog walking",
+                        "walking",
                         "hiking",
-                        "roller skating"
+                        "skating"
 
                 };
 
@@ -278,7 +280,7 @@ public class CreateChallengeActivity extends AppCompatActivity {
 
 
                 if (d2.after(d1)) {
-                    Toast.makeText(CreateChallengeActivity.this, "Pick valid end date", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(CreateChallengeActivity.this, "Pick valid end date.", Toast.LENGTH_SHORT).show();
 
                 } else {
                     challenge.startDate = test;
@@ -305,7 +307,7 @@ public class CreateChallengeActivity extends AppCompatActivity {
         });
 
 
-        FirebaseAuth mAuth;
+        final FirebaseAuth mAuth;
         mAuth = FirebaseAuth.getInstance();
         FirebaseUser user = mAuth.getCurrentUser();
         SharedPreferences sharedPref = getSharedPreferences("CurrentUser", Context.MODE_PRIVATE);
@@ -334,13 +336,13 @@ public class CreateChallengeActivity extends AppCompatActivity {
                     case "skiing":
                         challenge.points = 35;
                         break;
-                    case "dog walking":
+                    case "walking":
                         challenge.points = 15;
                         break;
                     case "hiking":
                         challenge.points = 30;
                         break;
-                    case "roller skating":
+                    case "skating":
                         challenge.points = 20;
                         break;
                     default:
@@ -349,10 +351,18 @@ public class CreateChallengeActivity extends AppCompatActivity {
                 }
 
 
+                if(challenge.type == null || challenge.latitude == null || challenge.longitude == null
+                        || challenge.endDate == null )
+                {
+                    Toast.makeText(CreateChallengeActivity.this,"No field can remain empty.",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
                 dr.child(challengeID).setValue(challenge).addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
                     public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(CreateChallengeActivity.this, "Challenge created with id:" + challengeID, Toast.LENGTH_LONG).show();
+                        Toast.makeText(CreateChallengeActivity.this, "Challenge created.", Toast.LENGTH_LONG).show();
 
 
                         Intent i = new Intent(CreateChallengeActivity.this, DynamicChallengeMapsActivity.class);
@@ -395,6 +405,27 @@ public class CreateChallengeActivity extends AppCompatActivity {
                         }
                     }
                 });
+
+
+
+                db.getReference("User").child(mAuth.getUid()).child("points").addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        long p=((Long) dataSnapshot.getValue()) ;
+                        p+=challenge.points;
+                        SharedPreferences sharedPref = getSharedPreferences("CurrentUser", Context.MODE_PRIVATE);
+                        SharedPreferences.Editor editor=sharedPref.edit();
+                        editor.putLong("points",p);
+                        editor.commit();
+                        db.getReference("User").child(mAuth.getUid()).child("points").setValue(p);
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
+
 
 
             }
@@ -446,11 +477,18 @@ public class CreateChallengeActivity extends AppCompatActivity {
                            break;
                }
 
+               if(challenge.type == null || challenge.tasks == null || challenge.latitude == null || challenge.longitude == null
+                       || challenge.endDate == null )
+               {
+                   Toast.makeText(CreateChallengeActivity.this,"No field can remain empty.",Toast.LENGTH_SHORT).show();
+                   return;
+               }
+
 
                dr.child(challengeID).setValue(challenge).addOnCompleteListener(new OnCompleteListener<Void>() {
                    @Override
                    public void onComplete(@NonNull Task<Void> task) {
-                       Toast.makeText(CreateChallengeActivity.this, "Challenge created with id:"+ challengeID, Toast.LENGTH_LONG).show();
+                       Toast.makeText(CreateChallengeActivity.this, "Challenge created."+ challengeID, Toast.LENGTH_LONG).show();
 
 
 
@@ -497,7 +535,28 @@ public class CreateChallengeActivity extends AppCompatActivity {
                });
 
 
+               db.getReference("User").child(mAuth.getUid()).child("points").addListenerForSingleValueEvent(new ValueEventListener() {
+                   @Override
+                   public void onDataChange(DataSnapshot dataSnapshot) {
+                       long p=((Long) dataSnapshot.getValue()) ;
+                       p+=challenge.points;
+                       SharedPreferences sharedPref = getSharedPreferences("CurrentUser", Context.MODE_PRIVATE);
+                       SharedPreferences.Editor editor=sharedPref.edit();
+                       editor.putLong("points",p);
+                       editor.commit();
+                       db.getReference("User").child(mAuth.getUid()).child("points").setValue(p);
+                   }
+
+                   @Override
+                   public void onCancelled(DatabaseError databaseError) {
+
+                   }
+               });
+
            }
+
+
+
 
 
        });
@@ -506,6 +565,15 @@ public class CreateChallengeActivity extends AppCompatActivity {
 
     }
 
+
+    @Override
+    public void onBackPressed() {
+        View v = findViewById(R.id.calendar_container);
+        if(v.getVisibility() == View.VISIBLE)
+            return;
+        else
+            super.onBackPressed();
+    }
 
 
 

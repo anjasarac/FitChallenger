@@ -27,8 +27,10 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="228dp"
+            android:layout_marginTop="208dp"
             android:text="@string/firstName"
+            android:textSize="18sp"
+            android:textStyle="bold|italic"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints" />
@@ -41,6 +43,8 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="276dp"
             android:text="@string/lastName"
+            android:textSize="18sp"
+            android:textStyle="bold|italic"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints" />
@@ -51,8 +55,10 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="328dp"
+            android:layout_marginTop="336dp"
             android:text="@string/phoneNumber"
+            android:textSize="18sp"
+            android:textStyle="bold|italic"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints" />
@@ -64,27 +70,36 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="380dp"
+            android:layout_marginTop="408dp"
             android:text="@string/emailAdress"
+            android:textSize="18sp"
+            android:textStyle="bold|italic"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints" />
 
         <ImageView
             android:id="@+id/imageView"
-            android:layout_width="375dp"
-            android:layout_height="133dp"
+            android:layout_width="155dp"
+            android:layout_height="169dp"
             android:layout_marginBottom="360dp"
             android:layout_marginEnd="16dp"
             android:layout_marginLeft="16dp"
             android:layout_marginRight="16dp"
             android:layout_marginStart="16dp"
             android:layout_marginTop="18dp"
+            android:background="@android:color/background_light"
+            android:cropToPadding="true"
+            android:fadingEdge="vertical"
+            android:padding="1dp"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintBottom_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.502"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.055" />
 
 
         <TextView
@@ -93,8 +108,9 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="252dp"
+            android:layout_marginTop="232dp"
             android:text=""
+            android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints" />
@@ -107,6 +123,7 @@
             android:layout_marginStart="16dp"
             android:layout_marginTop="300dp"
             android:text=""
+            android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints" />
@@ -117,8 +134,9 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="352dp"
+            android:layout_marginTop="364dp"
             android:text=""
+            android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints" />
@@ -129,8 +147,9 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="16dp"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="404dp"
+            android:layout_marginTop="436dp"
             android:text=""
+            android:textSize="18sp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:ignore="MissingConstraints" />
@@ -139,10 +158,12 @@
             android:id="@+id/textView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="164dp"
-            android:layout_marginRight="164dp"
-            android:layout_marginTop="228dp"
+            android:layout_marginEnd="148dp"
+            android:layout_marginRight="148dp"
+            android:layout_marginTop="208dp"
             android:text="Age: "
+            android:textSize="18sp"
+            android:textStyle="bold|italic"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -150,9 +171,9 @@
             android:id="@+id/textView5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="192dp"
-            android:layout_marginRight="192dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginEnd="188dp"
+            android:layout_marginRight="188dp"
+            android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView"
             tools:ignore="MissingConstraints" />
@@ -161,10 +182,12 @@
             android:id="@+id/textView6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="148dp"
-            android:layout_marginRight="148dp"
-            android:layout_marginTop="4dp"
+            android:layout_marginEnd="128dp"
+            android:layout_marginRight="128dp"
+            android:layout_marginTop="20dp"
             android:text="Points: "
+            android:textSize="18sp"
+            android:textStyle="bold|italic"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView5" />
 
@@ -172,11 +195,27 @@
             android:id="@+id/textView7"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginEnd="192dp"
-            android:layout_marginRight="192dp"
-            android:layout_marginTop="8dp"
+            android:layout_marginEnd="188dp"
+            android:layout_marginRight="188dp"
+            android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/textView6" />
+
+        <ImageView
+            android:id="@+id/imageView10"
+            android:layout_width="155dp"
+            android:layout_height="109dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginEnd="7dp"
+            android:layout_marginLeft="157dp"
+            android:layout_marginRight="7dp"
+            android:layout_marginStart="157dp"
+            android:layout_marginTop="84dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/emailAdr"
+            app:layout_constraintTop_toBottomOf="@+id/textView6"
+            app:srcCompat="@drawable/logofitchallenger" />
 
     </android.support.constraint.ConstraintLayout>
 

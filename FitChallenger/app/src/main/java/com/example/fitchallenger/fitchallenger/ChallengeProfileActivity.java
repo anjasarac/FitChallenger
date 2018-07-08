@@ -1,12 +1,17 @@
 package com.example.fitchallenger.fitchallenger;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
@@ -16,6 +21,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.LatLng;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -26,6 +32,7 @@ import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.example.fitchallenger.fitchallenger.R.color.common_google_signin_btn_text_dark_disabled;
@@ -40,6 +47,10 @@ public class ChallengeProfileActivity extends AppCompatActivity {
     private String myID;
     private String username;
     private long points;
+    Boolean alreadyDone = false;
+    static final int PERMISSION_ACCESS_FINE_LOCATION = 1;
+    private LatLng placeLoc;
+    private Challenge challenge;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,9 +77,103 @@ public class ChallengeProfileActivity extends AppCompatActivity {
         LoadFinishedBy();
 
 
+
+        LocationManager mLocationManager;
+        Location myLocation;
+
+
+        mLocationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
+        List<String> providers = mLocationManager.getProviders(true);
+        Location bestLocation = null;
+        for (String provider : providers) {
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_ACCESS_FINE_LOCATION);
+                //return;
+            }
+
+
+            Location l = mLocationManager.getLastKnownLocation(provider);
+            if (l == null) {
+                continue;
+            }
+            if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
+                // Found best last known location: %s", l);
+                bestLocation = l;
+            }
+        }
+
+
+        myLocation = bestLocation;
+
+        if (myLocation != null) {
+            placeLoc = new LatLng(myLocation.getLatitude(), myLocation.getLongitude());
+        }
+
+
+
+
+
+
+
+        findViewById(R.id.startChallenge).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                if(alreadyDone)
+                {
+                    Toast.makeText(ChallengeProfileActivity.this,"You have already finished this challenge.",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
+                float[] results = new float[1];
+                if(placeLoc == null)
+                {
+                    Toast.makeText(ChallengeProfileActivity.this,"Allow your location first.",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Location.distanceBetween(placeLoc.latitude,placeLoc.longitude,Double.parseDouble(challenge.latitude),Double.parseDouble(challenge.longitude),results);
+                //Toast.makeText(MapsActivity.this,"Distance for: " + m.getTitle() + " " + String.valueOf(results[0]),Toast.LENGTH_LONG).show();
+                if(results[0] > 200)
+                {
+                    Toast.makeText(ChallengeProfileActivity.this,"You have to be at challenge's position in order to start the challenge.",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
+                findViewById(R.id.staticChallengeInfo).setVisibility(View.INVISIBLE);
+                findViewById(R.id.staticChallengeTasks).setVisibility(View.VISIBLE);
+
+            }
+        });
+
+
         findViewById(R.id.startChallengeDynamic).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+                if(alreadyDone)
+                {
+                    Toast.makeText(ChallengeProfileActivity.this,"You have already finished this challenge.",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                float[] results = new float[1];
+                if(placeLoc == null)
+                {
+                    Toast.makeText(ChallengeProfileActivity.this,"Allow your location first.",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Location.distanceBetween(placeLoc.latitude,placeLoc.longitude,Double.parseDouble(challenge.latitude),Double.parseDouble(challenge.longitude),results);
+                //Toast.makeText(MapsActivity.this,"Distance for: " + m.getTitle() + " " + String.valueOf(results[0]),Toast.LENGTH_LONG).show();
+                if(results[0] > 200)
+                {
+                    Toast.makeText(ChallengeProfileActivity.this,"You have to be at challenge's position in order to start the challenge.",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
+
                 Intent i = new Intent(ChallengeProfileActivity.this,ChallengeInfoMapsActivity.class);
                 i.putExtra("challengeId",challengeId);
                 i.putExtra("challengePoints",points);
@@ -151,12 +256,12 @@ public class ChallengeProfileActivity extends AppCompatActivity {
                         if(v.getVisibility()==View.VISIBLE)
                         {
                             Button b = findViewById(R.id.startChallengeDynamic);
-                            b.setClickable(false);
+                            alreadyDone = true;
                             b.setBackgroundColor(R.color.common_google_signin_btn_text_dark_disabled);
                         }
                         else {
                             Button b = findViewById(R.id.startChallenge);
-                            b.setClickable(false);
+                            alreadyDone = true;
                             b.setBackgroundColor(R.color.common_google_signin_btn_text_dark_disabled);
                         }
                     }
@@ -179,7 +284,7 @@ public class ChallengeProfileActivity extends AppCompatActivity {
         query.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Challenge challenge = dataSnapshot.getValue(Challenge.class);
+                challenge = dataSnapshot.getValue(Challenge.class);
                 if(!challenge.dynamic) {
                     findViewById(R.id.staticChallengeInfo).setVisibility(View.VISIBLE);
                     findViewById(R.id.dynamicChallenge).setVisibility(View.INVISIBLE);

@@ -15,9 +15,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import android.app.ActionBar;
+import android.widget.AdapterView;
+import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -25,9 +32,25 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+
 public class HomeScreenActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
+    private Query QueryInvitedChallenges;
+    private ChildEventListener InvitedChallengesListener;
+    private String myID;
+    private String username;
+    ArrayList<String> challengeTypes;
+    ArrayList<Integer> challengeImages;
+    ArrayList<String> challengePoints;
+    ArrayList<String> challengeIDs;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,7 +58,12 @@ public class HomeScreenActivity extends AppCompatActivity {
 
         SharedPreferences sharedPref = getSharedPreferences("CurrentUser", Context.MODE_PRIVATE);
         String currentID =sharedPref.getString("myID","");
+        username = sharedPref.getString("username","");
+
         mAuth= FirebaseAuth.getInstance();
+
+        myID = mAuth.getUid();
+
         if(currentID.compareTo(mAuth.getUid())!=0)
             getUserData();
         setContentView(R.layout.activity_home_screen);
@@ -44,15 +72,162 @@ public class HomeScreenActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+
+        challengeIDs = new ArrayList<>();
+        challengeTypes = new ArrayList<>();
+        challengeImages = new ArrayList<>();
+        challengePoints = new ArrayList<>();
+
+        LoadChallenges();
+
+        ListView list = findViewById(R.id.listViewChallenges);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                Intent i = new Intent(HomeScreenActivity.this,ChallengeProfileActivity.class);
+                i.putExtra("challengeId", challengeIDs.get(position));
+                startActivity(i);
+
+
+            }
+        });
+
+
+
+    }
+
+    @Override
+    public void onBackPressed() {
+       return;
+    }
+
+    private void LoadChallenges()
+    {
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference dr = db.getReference("Invites");
+        QueryInvitedChallenges= dr.orderByChild(myID).equalTo(username);
+        InvitedChallengesListener= QueryInvitedChallenges.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
+                String m=dataSnapshot.getKey();
+                //    Toast.makeText(MapsActivity.this,m,Toast.LENGTH_SHORT).show();
+
+                GetChallengesFromFirebase(m);
+
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                //kad se promeni invite - to nikad nece da se desava
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                String m=dataSnapshot.getKey();
+                //Toast.makeText(HomeScreenActivity.this,"Obrisan iz baze "+ m,Toast.LENGTH_SHORT).show();
+
+                  //m je ID
+
+                int index = challengeIDs.lastIndexOf(m);
+                challengeImages.remove(index);
+                challengeTypes.remove(index);
+                challengePoints.remove(index);
+
+                challengeIDs.remove(index);
+                SetAdapter();
+
+
+
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
             }
         });
     }
+
+    private void GetChallengesFromFirebase(final String m)
+    {
+
+        FirebaseDatabase db = FirebaseDatabase.getInstance();
+        DatabaseReference dr = db.getReference("Challenge");
+
+
+        final Query query = dr.orderByKey().equalTo(m);
+        query.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                Challenge challenge  = dataSnapshot.getValue(Challenge.class);
+                if(ValidateDate(challenge.endDate))
+                    RemoveExpiredChallenge(m,challenge.dynamic);
+               else
+                {
+                    challengeIDs.add(m);
+
+                    challengeTypes.add(challenge.type);
+
+
+                    int resId = HomeScreenActivity.this.getResources().getIdentifier(
+                            challenge.type,
+                            "drawable",
+                            HomeScreenActivity.this.getPackageName()
+                    );
+
+
+                    challengePoints.add("You can earn " + String.valueOf(challenge.points) +  " points.");
+                    challengeImages.add(resId);
+
+                    SetAdapter();
+
+                }
+
+                query.removeEventListener(this);
+
+            }
+
+            @Override
+            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+
+            }
+        });
+
+    }
+
+    private void SetAdapter()
+    {
+        CustomListAdapter adapter=new CustomListAdapter(this, challengeTypes, challengeImages,null,challengePoints);
+        ListView list=(ListView)findViewById(R.id.listViewChallenges);
+        list.setAdapter(adapter);
+    }
+
 
     private void getUserData() {
         FirebaseDatabase db = FirebaseDatabase.getInstance();
@@ -71,6 +246,9 @@ public class HomeScreenActivity extends AppCompatActivity {
                 editor.putLong("points",user.points);
                 editor.putString("picture",user.picture);
                 editor.putString("myID",mAuth.getUid());
+
+                username = user.username;
+                myID = mAuth.getUid();
 
                 editor.commit();
             }
@@ -132,6 +310,41 @@ public class HomeScreenActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+    }
+
+    private Boolean ValidateDate(String endDate)
+    {
+
+        Date date = Calendar.getInstance().getTime();
+        SimpleDateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+        String test = df.format(date);
+        Date d1 = null;
+        Date d2 = null;
+        try {
+            d1 = df.parse(test);
+            d2 = df.parse(endDate);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        if(d1.after(d2))
+        {
+            Toast.makeText(HomeScreenActivity.this,"Challenge expired."+ endDate,Toast.LENGTH_SHORT).show();
+
+        }
+        return d1.after(d2);
+    }
+
+    private void RemoveExpiredChallenge(String ID,Boolean dynamic)
+    {
+        //Toast.makeText(HomeScreenActivity.this,"Delete"+ ID,Toast.LENGTH_SHORT).show();
+        DatabaseReference database=FirebaseDatabase.getInstance().getReference();
+        database.child("Challenge").child(ID).setValue(null);
+        database.child("Invites").child(ID).setValue(null);
+        database.child("FinishedBy").child(ID).setValue(null);
+        database.child("Geofire").child(ID).setValue(null);
+        if(dynamic)
+            database.child("Dynamic").child(ID).setValue(null);
 
     }
 }

@@ -8,6 +8,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 
 public class CustomListAdapter extends ArrayAdapter<String> {
@@ -15,9 +17,10 @@ public class CustomListAdapter extends ArrayAdapter<String> {
     private final Activity context;
     private final ArrayList<String> itemname;
     private final ArrayList<Integer> imgid;
+    private final ArrayList<String> imgUser;
     private final ArrayList<String>  points;
 
-    public CustomListAdapter(Activity context, ArrayList<String> itemname, ArrayList<Integer> imgid,ArrayList<String> points) {
+    public CustomListAdapter(Activity context, ArrayList<String> itemname, ArrayList<Integer> imgid,ArrayList<String> imgUser,ArrayList<String> points) {
         super(context, R.layout.mylist, itemname);
         // TODO Auto-generated constructor stub
 
@@ -25,6 +28,7 @@ public class CustomListAdapter extends ArrayAdapter<String> {
         this.itemname=itemname;
         this.imgid=imgid;
         this.points = points;
+        this.imgUser = imgUser;
     }
 
     public View getView(int position,View view,ViewGroup parent) {
@@ -36,8 +40,22 @@ public class CustomListAdapter extends ArrayAdapter<String> {
         TextView extratxt = (TextView) rowView.findViewById(R.id.textView1);
 
         txtTitle.setText(itemname.get(position));
-        imageView.setImageResource(imgid.get(position));
-        extratxt.setText("Points won: "+points.get(position));
+
+      if(imgUser == null)
+      {
+          imageView.setImageResource(imgid.get(position));
+          extratxt.setText(points.get(position));
+      }
+      else
+      {
+          Picasso.with(context)
+                  .load(imgUser.get(position))
+                  .into(imageView);
+          extratxt.setText(points.get(position));
+      }
+
+
+
         return rowView;
 
     };

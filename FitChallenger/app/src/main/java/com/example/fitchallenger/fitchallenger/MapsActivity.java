@@ -2,6 +2,7 @@ package com.example.fitchallenger.fitchallenger;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -23,6 +24,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.ArraySet;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -73,6 +76,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.List;
+import java.util.concurrent.Semaphore;
+
+import static android.app.PendingIntent.getActivity;
 
 public class MapsActivity extends AppCompatActivity implements OnMapReadyCallback {
 
@@ -84,7 +90,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     String challengeID;
     private boolean myChallenges = false;
     public Challenge createdChallenge;
-    public Boolean showFriends, showChallenges;
+    public Boolean showUsers, showChallenges,showFriends=false;
     private FirebaseAuth mAuth;
     private HashMap<Marker, String> markerChallenges;
     private HashMap<Marker, String> markerMyChallenges;
@@ -103,8 +109,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     private DatabaseReference friendRefrence;
     private ValueEventListener friendsListener;
     private Map<String, String> friends;
+    private Map<String, User> users;
     private Set<String> friendsIDs;
+    private Set<String> userIDs;
     private ArrayList<User> friendsOnMap;
+    private ArrayList<User> usersOnMap;
+    private HashMap<Marker,String> markerUsers;
+    private ChildEventListener userListener;
+    private DatabaseReference userReference;
+    Semaphore userSemaphore;
 
 
     @Override
@@ -117,22 +130,26 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        userSemaphore=new Semaphore(1);
 
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        getSupportActionBar().setHomeButtonEnabled(false);
 
         SharedPreferences sharedPref = getSharedPreferences("CurrentUser", Context.MODE_PRIVATE);
         username = sharedPref.getString("username", "");
 
-        showFriends = sharedPref.getBoolean("showFriends", false);
+        showUsers = sharedPref.getBoolean("showFriends", false);
         showChallenges = sharedPref.getBoolean("showChallenges", true);
 
 
-
-
+        userIDs=new android.support.v4.util.ArraySet<>();
         mAuth = FirebaseAuth.getInstance();
         myID = mAuth.getCurrentUser().getUid();
         markerChallenges = new HashMap<Marker, String>();
         markerMyChallenges=new HashMap<Marker, String>();
         markerMyFriends=new HashMap<Marker, String>();
+        markerUsers=new HashMap<Marker, String>();
+
 
         final Intent challengeI = getIntent();
 
@@ -147,6 +164,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         invitedChallengesOnMap = new ArrayList<Challenge>();
         myChallengesOnMap=new ArrayList<Challenge>();
         friendsOnMap=new ArrayList<User>();
+        usersOnMap=new ArrayList<User>();
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -172,15 +190,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         }
 
-        else
-            Toast.makeText(MapsActivity.this,"Show challenges disabled", Toast.LENGTH_SHORT).show();
 
-        if(showFriends == true) {
-            Toast.makeText(MapsActivity.this, "Show friends enabled", Toast.LENGTH_SHORT).show();
-            ShowFriends();
+
+        if(showUsers == true) {
+
+            {
+                if(showFriends) {
+
+                    ShowFriends();
+                }
+                 else {
+                    ShowFriends();
+                    //SetInvisible(markerMyFriends);
+                    ShowUsers();
+                }
+            }
         }
-        else
-            Toast.makeText(MapsActivity.this,"Show friends disabled", Toast.LENGTH_SHORT).show();
 
 
         final Spinner spinnerType = (Spinner) findViewById(R.id.spinnerType);
@@ -193,9 +218,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                         "cycling",
                         "basketball",
                         "soccer",
+                        "jogging",
+                        "walking",
+                        "hiking",
+                        "skating",
                         "skiing",
                         "swimming",
-                        "fishing"
+                        "fishing",
+                        "golf",
+                        "tennis"
                 };
 
         ArrayAdapter<String> adapterType = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_dropdown_item,types);
@@ -250,6 +281,149 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    private void ShowUsers() {
+        FirebaseDatabase db= FirebaseDatabase.getInstance();
+        userReference=db.getReference("User");
+        userListener=userReference.addChildEventListener(new ChildEventListener() {
+            @Override
+            public void onChildAdded(final DataSnapshot dataSnapshot, String s) {
+                final User user=dataSnapshot.getValue(User.class);
+                if(!dataSnapshot.getKey().equals(myID)) {
+                    userIDs.add(dataSnapshot.getKey());
+                        if (user.visible) {
+                            if (!usersOnMap.contains(user))
+                                usersOnMap.add(user);
+
+                            final LatLng ll = new LatLng(Double.parseDouble(user.latitude), Double.parseDouble(user.longitude));
+
+
+                            Thread thread = new Thread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    URL url;
+                                    final MarkerOptions markerOptions = new MarkerOptions();
+                                    try {
+                                        url = new URL(user.picture);
+                                        final Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                                        final Bitmap smallMarker = Bitmap.createScaledBitmap(bmp, 110, 115, false);
+                                        markerOptions.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                    }
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+
+
+                                            markerOptions.position(ll);
+                                            markerOptions.snippet("Name: " + user.name + "\n" + "Last name: " + user.lastname);
+
+                                            markerOptions.title(user.username);
+
+                                            if (markerUsers.containsValue(dataSnapshot.getKey())) {
+                                                Marker delete = getKeyByValue(markerUsers, dataSnapshot.getKey());
+                                                markerUsers.remove(delete);
+                                                delete.remove();
+                                            }
+
+                                                Marker marker = mMap.addMarker(markerOptions);
+                                                marker.setTag(user);
+
+                                                markerUsers.put(marker, dataSnapshot.getKey());
+
+
+
+
+                                        }
+                                    });
+                                }
+                            });
+                            thread.start();
+
+
+
+                    }
+                }
+            }
+
+            @Override
+            public void onChildChanged(final DataSnapshot dataSnapshot, String s) {
+                final User user=dataSnapshot.getValue(User.class);
+                if(!dataSnapshot.getKey().equals(myID)) {
+                    userIDs.add(dataSnapshot.getKey());
+                    if (user.visible) {
+                        if (!usersOnMap.contains(user))
+                            usersOnMap.add(user);
+
+                        final LatLng ll = new LatLng(Double.parseDouble(user.latitude), Double.parseDouble(user.longitude));
+
+
+                        final Thread thread = new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                URL url;
+                                final MarkerOptions markerOptions = new MarkerOptions();
+                                try {
+                                    url = new URL(user.picture);
+                                    final Bitmap bmp = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                                    final Bitmap smallMarker = Bitmap.createScaledBitmap(bmp, 110, 115, false);
+                                    markerOptions.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+
+
+                                        markerOptions.position(ll);
+                                        markerOptions.snippet("Name: " + user.name + "\n" + "Last name: " + user.lastname);
+
+                                        markerOptions.title(user.username);
+
+                                        if (markerUsers.containsValue(dataSnapshot.getKey())) {
+                                            Marker delete = getKeyByValue(markerUsers, dataSnapshot.getKey());
+                                            markerUsers.remove(delete);
+                                            delete.remove();
+                                        }
+
+
+                                            Marker marker = mMap.addMarker(markerOptions);
+                                            marker.setTag(user);
+
+                                            markerUsers.put(marker, dataSnapshot.getKey());
+                                            userSemaphore.release();
+
+                                    }
+                                });
+                            }
+                        });
+                        thread.start();
+
+
+
+                    }
+                }
+
+            }
+
+            @Override
+            public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+            }
+
+            @Override
+            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
     private void ShowFriends() {
 
         friendRefrence= FirebaseDatabase.getInstance().getReference().child("Friends").child(myID);
@@ -262,11 +436,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 if (friends != null) {
                     friendsIDs = friends.keySet();
                 }
-                List<String> list= new ArrayList<>(friendsIDs);
-               for (int i=0;i<list.size();i++)
-               {
-                   getFriendFromFirebase(list.get(i));
-               }
+                if(friendsIDs!=null)
+                {
+                    List<String> list= new ArrayList<>(friendsIDs);
+                    for (int i=0;i<list.size();i++)
+                    {
+                        getFriendFromFirebase(list.get(i));
+                    }
+                }
+
 
 
             }
@@ -321,10 +499,20 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
                                     markerOptions.title(user.username);
 
-                                    Marker marker = mMap.addMarker(markerOptions);
-                                    marker.setTag(user);
-                                    if (!markerMyFriends.containsValue(s))
+
+                                    if (markerMyFriends.containsValue(s)) {
+                                        Marker delete=getKeyByValue(markerMyFriends,s);
+                                        markerMyFriends.remove(delete);
+                                        delete.remove();
+
+                                    }
+
+                                        Marker marker = mMap.addMarker(markerOptions);
+                                    if(!showFriends)
+                                        marker.setVisible(false);
+                                        marker.setTag(user);
                                         markerMyFriends.put(marker, s);
+
 
                                 }
                             });
@@ -343,7 +531,65 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             }
 
             @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            public void onChildChanged(DataSnapshot dataSnapshot, final String s) {
+                final User user  = dataSnapshot.getValue(User.class);
+                if (user.visible) {
+                    if (!friendsOnMap.contains(user))
+                        friendsOnMap.add(user);
+
+                    final LatLng ll = new LatLng(Double.parseDouble(user.latitude), Double.parseDouble(user.longitude));
+
+
+                    Thread thread = new Thread(new Runnable(){
+                        @Override
+                        public void run(){
+                            URL url ;
+                            final MarkerOptions markerOptions = new MarkerOptions();
+                            try {
+                                url = new URL(user.picture);
+                                final Bitmap bmp  = BitmapFactory.decodeStream(url.openConnection().getInputStream());
+                                final Bitmap smallMarker = Bitmap.createScaledBitmap(bmp,110,115,false);
+                                markerOptions.icon(BitmapDescriptorFactory.fromBitmap(smallMarker));
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+
+
+                                    markerOptions.position(ll);
+                                    markerOptions.snippet("Name: " + user.name + "\n" + "Last name: " + user.lastname);
+
+                                    markerOptions.title(user.username);
+
+                                    if (markerMyFriends.containsValue(s)) {
+                                        Marker delete=getKeyByValue(markerMyFriends,s);
+                                        markerMyFriends.remove(delete);
+                                        delete.remove();
+
+                                    }
+
+                                    Marker marker = mMap.addMarker(markerOptions);
+                                    if(!showFriends)
+                                        marker.setVisible(false);
+                                    marker.setTag(user);
+                                    markerMyFriends.put(marker, s);
+
+                                }
+                            });
+                        }
+                    });
+                    thread.start();
+
+
+
+
+
+                }
+
+                query.removeEventListener(this);
+
 
             }
 
@@ -415,9 +661,10 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         //noinspection SimplifiableIfStatement
         if (id == R.id.invited_challenges) {
             findViewById(R.id.fab).setVisibility(View.VISIBLE);
-            Toast.makeText(MapsActivity.this,"Show invited Challenges", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MapsActivity.this,"Show invited Challenges", Toast.LENGTH_SHORT).show();
             myChallenges=false;
             RemoveAllMarkers(markerMyChallenges);
+            RemoveAllMarkers(markerChallenges);
             myChallengesOnMap.clear();
             if(QueryMyChallenges!=null)
             QueryMyChallenges.removeEventListener(MyChallengesListener);
@@ -426,13 +673,43 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
         if (id == R.id.my_challenges) {
             findViewById(R.id.fab).setVisibility(View.INVISIBLE);
-            Toast.makeText(MapsActivity.this,"Show my Challenges", Toast.LENGTH_SHORT).show();
             myChallenges=true;
             if(QueryInvitedChallenges!=null)
             QueryInvitedChallenges.removeEventListener(InvitedChallengesListener);
             RemoveAllMarkers(markerChallenges);
+            RemoveAllMarkers(markerMyChallenges);
             invitedChallengesOnMap.clear();
             ShowMyChallenges();
+        }
+        if (id == R.id.all_users) {
+            if(showUsers) {
+                findViewById(R.id.fab).setVisibility(View.INVISIBLE);
+
+                //if (friendRefrence != null)
+                 //   friendRefrence.removeEventListener(friendsListener);
+               // if(!showFriends)
+               // {
+                //    RemoveAllMarkers(markerMyFriends);
+                 //   ShowFriends();
+               // }
+                RemoveAllMarkers(markerUsers);
+                SetInvisible(markerMyFriends);
+                ShowUsers();
+                showFriends = false;
+            }
+        }
+        if (id == R.id.friends_only) {
+            if(showUsers) {
+                if (friendRefrence != null)
+                    friendRefrence.removeEventListener(friendsListener);
+                findViewById(R.id.fab).setVisibility(View.INVISIBLE);
+                showFriends = true;
+                if (userReference != null)
+                    userReference.removeEventListener(userListener);
+                RemoveAllMarkers(markerUsers);
+                RemoveAllMarkers(markerMyFriends);
+                ShowFriends();
+            }
         }
         if (id == R.id.nearest) {
 
@@ -441,9 +718,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             else
                 ShowNearest(markerChallenges);
-            if(showFriends)
+            if(showUsers)
             {
-                ShowNearest(markerMyFriends);
+                if(showFriends) {
+
+                    ShowNearest(markerMyFriends);
+                }else
+
+                ShowNearest(markerUsers);
             }
             
         }
@@ -453,9 +735,19 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 ShowAll(markerMyChallenges);
             else
                 ShowAll(markerChallenges);
-            if(showFriends)
-                ShowAll(markerMyFriends);
+            if(showUsers) {
+                if(showFriends)
+              ShowAll(markerMyFriends);
+                else
 
+                ShowAll(markerUsers);
+            }
+        }
+
+        if (id == R.id.home)
+        {
+            Intent i = new Intent(MapsActivity.this,HomeScreenActivity.class);
+            startActivity(i);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -498,6 +790,15 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         map.clear();
     }
 
+    private void SetInvisible(HashMap<Marker, String> map) {
+        for (Map.Entry<Marker, String> entry : map.entrySet()) {
+            Marker m= entry.getKey();
+            m.setVisible(false);
+
+        }
+
+    }
+
     private void ShowMyChallenges() {
 
         FirebaseDatabase db = FirebaseDatabase.getInstance();
@@ -509,7 +810,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Challenge challenge  = dataSnapshot.getValue(Challenge.class);
                 String key=dataSnapshot.getKey();
                 if(ValidateDate(challenge.endDate))
-                   RemoveExpiredChallenge(key);
+                   RemoveExpiredChallenge(key,challenge.dynamic);
 
                 else {
                     if (!myChallengesOnMap.contains(challenge))
@@ -571,7 +872,22 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        if(ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=  PackageManager.PERMISSION_GRANTED) {
 
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_ACCESS_FINE_LOCATION);
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.ACCESS_COARSE_LOCATION}, PERMISSION_ACCESS_FINE_LOCATION);
+
+        }
+        else {
+
+            MapReady();
+        }
+
+
+    }
+
+    private void MapReady() {
         LocationManager mLocationManager;
         Location myLocation;
 
@@ -580,9 +896,12 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         List<String> providers = mLocationManager.getProviders(true);
         Location bestLocation = null;
         for (String provider : providers) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+            {
 
                 ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_ACCESS_FINE_LOCATION);
+
+                //ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_ACCESS_FINE_LOCATION);
                 //return;
             }
 
@@ -662,35 +981,45 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         mMap.setOnInfoWindowClickListener(new GoogleMap.OnInfoWindowClickListener() {
             @Override
             public void onInfoWindowClick(Marker marker) {
-            if(marker.equals(MyMarker))
-                return;
-            if(!myChallenges) {
-                LatLng latLon = marker.getPosition();
-
-                if(markerMyFriends.containsKey(marker))
+                if(marker.equals(MyMarker))
+                    return;
+                if(markerUsers.containsKey(marker) && markerMyFriends.containsValue(markerUsers.get(marker)))
                 {
-
-                    String userID = markerMyFriends.get(marker);
+                    String userID = markerUsers.get(marker);
                     Intent i = new Intent(MapsActivity.this,FriendProfileActivity.class);
                     i.putExtra("friendID",userID);
                     startActivity(i);
                 }
-
                 else
-                {
-                    String id = markerChallenges.get(marker);
+                    {
+                    if (markerUsers.containsKey(marker)) {
+                        return;
+                    }
 
-                    Intent i = new Intent(MapsActivity.this, ChallengeProfileActivity.class);
-                    i.putExtra("challengeId", id);
-                    startActivity(i);
+                    if (markerMyFriends.containsKey(marker)) {
+
+                        String userID = markerMyFriends.get(marker);
+                        Intent i = new Intent(MapsActivity.this, FriendProfileActivity.class);
+                        i.putExtra("friendID", userID);
+                        startActivity(i);
+                    }
+                    else
+
+                if(!myChallenges) {
+                    LatLng latLon = marker.getPosition();
+                    //
+
+                            String id = markerChallenges.get(marker);
+
+                            Intent i = new Intent(MapsActivity.this, ChallengeProfileActivity.class);
+                            i.putExtra("challengeId", id);
+                            startActivity(i);
+
+
+
+                    }
+
                 }
-
-
-
-
-
-
-            }
 
 
 
@@ -703,8 +1032,8 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
 
 
-
     }
+
     @SuppressLint("MissingPermission")
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -717,10 +1046,14 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                     // mMap.setMyLocationEnabled(true);
 
                         mMap.setMyLocationEnabled(true);
+                        MapReady();
 
                 }
-                return;
+               else
+                   MapReady();
+
             }
+
         }
         // super.onRequestPermissionsResult(requestCode, permissions, grantResults);
     }
@@ -750,7 +1083,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
             public void onChildRemoved(DataSnapshot dataSnapshot) {
 
                 String m=dataSnapshot.getKey();
-                Toast.makeText(MapsActivity.this,"Obrisan iz baze "+ m,Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MapsActivity.this,"Obrisan iz baze "+ m,Toast.LENGTH_SHORT).show();
 
 
                 Marker marker=getKeyByValue(markerChallenges,m);
@@ -788,7 +1121,7 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                     Challenge challenge  = dataSnapshot.getValue(Challenge.class);
                     if(ValidateDate(challenge.endDate))
-                        RemoveExpiredChallenge(m);
+                        RemoveExpiredChallenge(m,challenge.dynamic);
                     else
                         if ((type.compareTo("all")==0 || type.compareTo(challenge.type)==0) &&  CheckDates(challenge.endDate))
                         {
@@ -948,20 +1281,23 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         if(d1.after(d2))
         {
-            Toast.makeText(MapsActivity.this,"challenge expired"+ endDate,Toast.LENGTH_SHORT).show();
+            Toast.makeText(MapsActivity.this,"Challenge expired."+ endDate,Toast.LENGTH_SHORT).show();
 
         }
         return d1.after(d2);
     }
 
-    private void RemoveExpiredChallenge(String ID)
+    private void RemoveExpiredChallenge(String ID,Boolean dynamic)
     {
-        Toast.makeText(MapsActivity.this,"Delete"+ ID,Toast.LENGTH_SHORT).show();
+        //Toast.makeText(MapsActivity.this,"Delete"+ ID,Toast.LENGTH_SHORT).show();
         DatabaseReference database=FirebaseDatabase.getInstance().getReference();
         database.child("Challenge").child(ID).setValue(null);
         database.child("Invites").child(ID).setValue(null);
         database.child("FinishedBy").child(ID).setValue(null);
         database.child("Geofire").child(ID).setValue(null);
+        if(dynamic)
+            database.child("Dynamic").child(ID).setValue(null);
+
 }
 
     @Override
@@ -1033,5 +1369,13 @@ public class MapsActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     }
 
+    @Override
+    public void onBackPressed() {
+        View v = findViewById(R.id.filters_container);
+        if(v.getVisibility() == View.VISIBLE)
+            return;
+        else
+            super.onBackPressed();
+    }
 
 }

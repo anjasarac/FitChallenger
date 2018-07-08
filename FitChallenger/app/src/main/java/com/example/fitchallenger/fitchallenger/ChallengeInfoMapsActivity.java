@@ -1,6 +1,7 @@
 package com.example.fitchallenger.fitchallenger;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -51,6 +52,9 @@ public class ChallengeInfoMapsActivity extends FragmentActivity implements OnMap
     BroadcastReceiver broadcastReceiver;
     List<LatLng> path;
     Long points;
+    boolean service;
+
+    Intent i;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,12 +79,37 @@ public class ChallengeInfoMapsActivity extends FragmentActivity implements OnMap
         challengeId = challengeBundle.getString("challengeId");
         points=challengeBundle.getLong("challengePoints");
 
+        i = new Intent(getApplicationContext(), MyService.class);
+        if (!isMyServiceRunning(MyService.class)) {
+            startService(i);
+            service=false;
+        }else
+        {
+            service=true;
+        }
 
 
         findViewById(R.id.finish_dynamic_challenge).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(ChallengeInfoMapsActivity.this,"KLIK",Toast.LENGTH_SHORT).show();
+
+                float[] results = new float[1];
+
+                LatLng challengeFinish = path.get(path.size()-1);
+
+                Location.distanceBetween(placeLoc.latitude,placeLoc.longitude,challengeFinish.latitude,challengeFinish.longitude,results);
+                //Toast.makeText(MapsActivity.this,"Distance for: " + m.getTitle() + " " + String.valueOf(results[0]),Toast.LENGTH_LONG).show();
+                if(results[0] > 100)
+                {
+                    Toast.makeText(ChallengeInfoMapsActivity.this,"In order to finish the challenge you need to cross the finish line.",Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+
+                if (!service)
+                    stopService(i);
+
+                //Toast.makeText(ChallengeInfoMapsActivity.this,"KLIK",Toast.LENGTH_SHORT).show();
                 final FirebaseDatabase db = FirebaseDatabase.getInstance();
                 db.getReference("FinishedBy").child(challengeId).addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
@@ -101,7 +130,7 @@ public class ChallengeInfoMapsActivity extends FragmentActivity implements OnMap
 
                     }
                 });
-                Toast.makeText(ChallengeInfoMapsActivity.this,"poeni",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(ChallengeInfoMapsActivity.this,"poeni",Toast.LENGTH_SHORT).show();
                 db.getReference("User").child(myID).child("points").addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -121,7 +150,7 @@ public class ChallengeInfoMapsActivity extends FragmentActivity implements OnMap
                     }
                 });
 
-                Toast.makeText(ChallengeInfoMapsActivity.this,"mapa",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(ChallengeInfoMapsActivity.this,"mapa",Toast.LENGTH_SHORT).show();
                 Intent i = new Intent(ChallengeInfoMapsActivity.this,MapsActivity.class);
                 startActivity(i);
             }
@@ -269,4 +298,16 @@ public class ChallengeInfoMapsActivity extends FragmentActivity implements OnMap
         });
 
     }
+
+
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

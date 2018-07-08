@@ -81,6 +81,12 @@ public class MyProfileActivity extends AppCompatActivity {
     ArrayList<String> challengePoints;
     private TableLayout friendsTable;
 
+
+    ArrayList<String> friendsNames;
+    ArrayList<String> friendsImages; ///treba INT
+    ArrayList<String> friendsUsernames;
+
+
     Uri downloadUrl;
     private int mMenuID;
     private BottomNavigationView.OnNavigationItemSelectedListener mOnNavigationItemSelectedListener
@@ -145,6 +151,9 @@ public class MyProfileActivity extends AppCompatActivity {
         challengeTypes = new ArrayList<>();
         challengeImages = new ArrayList<>();
         challengePoints = new ArrayList<>();
+        friendsNames = new ArrayList<>();
+        friendsImages = new ArrayList<>();
+        friendsUsernames = new ArrayList<>();
 
 
         friendsIDs = new ArrayList<>();
@@ -206,9 +215,9 @@ public class MyProfileActivity extends AppCompatActivity {
                 l.setVisibility(View.INVISIBLE);
                 View l1=(View)findViewById(R.id.friends_container);
                 l1.setVisibility(View.VISIBLE);
-                friendsTable.setVisibility(View.VISIBLE);
+                //friendsTable.setVisibility(View.VISIBLE);
                 navigation.getMenu().findItem(R.id.friends).setChecked(true);
-                ShowFriends();
+
 
 
             }
@@ -216,7 +225,7 @@ public class MyProfileActivity extends AppCompatActivity {
 
 
         GetAllChallenges();
-
+        ShowFriends();
 
 
         ListView list = findViewById(R.id.listViewChallenges);
@@ -224,8 +233,18 @@ public class MyProfileActivity extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // TODO Auto-generated method stub
-                String Slecteditem= challengeTypes.get(position);
-                Toast.makeText(getApplicationContext(), Slecteditem, Toast.LENGTH_SHORT).show();
+
+
+            }
+        });
+
+
+        ListView listFriends = findViewById(R.id.listViewFriends);
+        list.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                // TODO Auto-generated method stub
+
 
             }
         });
@@ -242,10 +261,17 @@ public class MyProfileActivity extends AppCompatActivity {
 
     private void SetAdapter()
     {
-        CustomListAdapter adapter=new CustomListAdapter(this, challengeTypes, challengeImages,challengePoints);
+        CustomListAdapter adapter=new CustomListAdapter(this, challengeTypes, challengeImages,null,challengePoints);
         ListView list=(ListView)findViewById(R.id.listViewChallenges);
         list.setAdapter(adapter);
 
+    }
+    private void SetAdapterFriends()
+    {
+        //Toast.makeText(MyProfileActivity.this,"Set adapter friends",Toast.LENGTH_SHORT).show();
+        CustomListAdapter adapter=new CustomListAdapter(this, friendsUsernames,null, friendsImages,friendsNames);
+        ListView list=(ListView)findViewById(R.id.listViewFriends);
+        list.setAdapter(adapter);
     }
 
     private void GetAllChallenges()
@@ -315,7 +341,7 @@ public class MyProfileActivity extends AppCompatActivity {
                 );
 
 
-                challengePoints.add(String.valueOf(challenge.points));
+                challengePoints.add("Points won: " + String.valueOf(challenge.points));
                 challengeImages.add(resId);
 
 
@@ -397,6 +423,7 @@ public class MyProfileActivity extends AppCompatActivity {
         });
     }
 
+    //tabela
     private void GetUserDetails(List friendListID)
     {
         for(int i=0; i< friendListID.size(); i++)
@@ -407,7 +434,17 @@ public class MyProfileActivity extends AppCompatActivity {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     User user = dataSnapshot.getValue(User.class);
 
-                    TableRow tr =  new TableRow(MyProfileActivity.this);
+
+                    friendsUsernames.add(user.username);
+                    friendsNames.add(user.name + " " + user.lastname);
+                    friendsImages.add(user.picture);
+
+
+                    SetAdapterFriends();
+
+
+
+                    /*TableRow tr =  new TableRow(MyProfileActivity.this);
 
                     ImageView c1 = new ImageView(MyProfileActivity.this);
                     c1.setPadding(0,3,0,3);
@@ -437,7 +474,7 @@ public class MyProfileActivity extends AppCompatActivity {
                     v.getLayoutParams().height=2;
                     v.getLayoutParams().width=2000;
                     v.requestLayout();
-
+*/
                 }
 
                 @Override
@@ -513,9 +550,9 @@ public class MyProfileActivity extends AppCompatActivity {
        if(picture.compareTo("")==0)
       {
           Picasso.with(this)
-              .load(picture)
-              .into(i);
-      }
+           .load(picture)
+           .into(i);
+   }
       else
       {
           FirebaseUser user = mAuth.getCurrentUser();

@@ -116,7 +116,7 @@ public android.os.Handler mHandler = new android.os.Handler(){
                       if(s.compareTo("0000000000000000000000000000")!=0) {
                           ShowUserNotification(s);
                       }
-                      Toast.makeText(SettingsActivity.this, "You are  " + s + ".", Toast.LENGTH_LONG).show();
+                      //Toast.makeText(SettingsActivity.this, "You are  " + s + ".", Toast.LENGTH_LONG).show();
 
 
 
@@ -298,7 +298,7 @@ public android.os.Handler mHandler = new android.os.Handler(){
 
         if (mBluetoothAdapter == null) {
             // Device doesn't support Bluetooth
-            Toast.makeText(SettingsActivity.this, "Device doesn't support Bluetooth", Toast.LENGTH_LONG).show();
+            Toast.makeText(SettingsActivity.this, "Device doesn't support Bluetooth.", Toast.LENGTH_LONG).show();
         }
 
         if(mBluetoothAdapter.isEnabled())
@@ -430,7 +430,7 @@ public android.os.Handler mHandler = new android.os.Handler(){
 
                 } else
                 {
-                    Toast.makeText(SettingsActivity.this, "Bluetooth off", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(SettingsActivity.this, "Bluetooth off", Toast.LENGTH_LONG).show();
                     mBluetoothAdapter.disable();
                     if (serverThread != null)
                         serverThread.cancel();
@@ -463,7 +463,7 @@ public android.os.Handler mHandler = new android.os.Handler(){
                     setTitle("Found users:");
                     if (serverThread != null) {
                         serverThread.cancel();
-                        Toast.makeText(SettingsActivity.this, "Server off", Toast.LENGTH_SHORT).show();
+                        //Toast.makeText(SettingsActivity.this, "Server off", Toast.LENGTH_SHORT).show();
                     }
 
                     findViewById(R.id.friendrequest_container).setVisibility(View.VISIBLE);
@@ -510,7 +510,7 @@ public android.os.Handler mHandler = new android.os.Handler(){
             //Gson gson = new Gson();
             //String str = gson.toJson(bluetoothDevice);
 
-            Toast.makeText(SettingsActivity.this,devices.get(info.position).getName(),Toast.LENGTH_SHORT).show();
+            //Toast.makeText(SettingsActivity.this,devices.get(info.position).getName(),Toast.LENGTH_SHORT).show();
             clientThread=new ConnectThread(devices.get(info.position),cHandler);
             clientThread.start();
             friendRefrence.removeEventListener(friendsListener);
@@ -546,7 +546,7 @@ public android.os.Handler mHandler = new android.os.Handler(){
                              if (device.getAddress().compareTo(device1.getAddress()) == 0)
                                  {
                                      isti = true;
-                                     Toast.makeText(SettingsActivity.this, "Upareni " + device1.getName(), Toast.LENGTH_SHORT).show();
+                                     //Toast.makeText(SettingsActivity.this, "Upareni " + device1.getName(), Toast.LENGTH_SHORT).show();
                                  }
 
                              }
@@ -569,22 +569,22 @@ public android.os.Handler mHandler = new android.os.Handler(){
 
                     @Override
                     public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                       Toast.makeText(SettingsActivity.this, "onChildChanged: " + username, Toast.LENGTH_LONG).show();
+                       //Toast.makeText(SettingsActivity.this, "onChildChanged: " + username, Toast.LENGTH_LONG).show();
                        }
 
                        @Override
                        public void onChildRemoved(DataSnapshot dataSnapshot) {
-                         Toast.makeText(SettingsActivity.this, "onChildRemoved: " + username, Toast.LENGTH_LONG).show();
+                         //Toast.makeText(SettingsActivity.this, "onChildRemoved: " + username, Toast.LENGTH_LONG).show();
                        }
 
                        @Override
                        public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-                        Toast.makeText(SettingsActivity.this, "onChildMoved: " + username, Toast.LENGTH_LONG).show();
+                        //Toast.makeText(SettingsActivity.this, "onChildMoved: " + username, Toast.LENGTH_LONG).show();
                        }
 
                        @Override
                        public void onCancelled(DatabaseError databaseError) {
-                        Toast.makeText(SettingsActivity.this, "onCancelled: " + username, Toast.LENGTH_LONG).show();
+                        //Toast.makeText(SettingsActivity.this, "onCancelled: " + username, Toast.LENGTH_LONG).show();
                        }
                        });
 
@@ -594,10 +594,10 @@ public android.os.Handler mHandler = new android.os.Handler(){
                     if(dataSnapshot==null)
                     {
                         query.removeEventListener(el);
-                        Toast.makeText(SettingsActivity.this, "kill child", Toast.LENGTH_LONG).show();
+                        //Toast.makeText(SettingsActivity.this, "kill child", Toast.LENGTH_LONG).show();
                     }
                         query.removeEventListener(this);
-                        Toast.makeText(SettingsActivity.this, "kill", Toast.LENGTH_LONG).show();
+                        //Toast.makeText(SettingsActivity.this, "kill", Toast.LENGTH_LONG).show();
 
                     }
                     @Override
@@ -637,7 +637,7 @@ public android.os.Handler mHandler = new android.os.Handler(){
 
     public void ShowMessage(String id )
     {
-        Toast.makeText(this,"ID "+id,Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this,"ID "+id,Toast.LENGTH_SHORT).show();
         Intent i = new Intent(SettingsActivity.this,FriendRequestActivity.class);
         i.putExtra("userID",id);
         startActivityForResult(i,4);
@@ -649,13 +649,13 @@ public android.os.Handler mHandler = new android.os.Handler(){
         super.onActivityResult(requestCode, resultCode, data);
         if(resultCode==RESULT_OK)
         {
-            Toast.makeText(SettingsActivity.this,"Result OK",Toast.LENGTH_SHORT).show();
+            //Toast.makeText(SettingsActivity.this,"Result OK",Toast.LENGTH_SHORT).show();
             serverThread.accept=true;
             serverThread.semaphore.release();
         }
         if(resultCode==RESULT_FIRST_USER)
         {
-            Toast.makeText(SettingsActivity.this,"Result CANCELED",Toast.LENGTH_SHORT).show();
+            //Toast.makeText(SettingsActivity.this,"Result CANCELED",Toast.LENGTH_SHORT).show();
             serverThread.accept=false;
             serverThread.semaphore.release();
 
